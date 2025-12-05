@@ -1,0 +1,85 @@
+{
+  "name": "@entrolytics/drizzle-client",
+  "version": "2.0.0",
+  "description": "Drizzle ORM client wrapper with Neon serverless support, read replicas, and utilities",
+  "keywords": [
+    "drizzle",
+    "orm",
+    "neon",
+    "postgres",
+    "serverless",
+    "database",
+    "analytics",
+    "entrolytics"
+  ],
+  "author": "Entrolytics <hey@ng.entrolytics.click>",
+  "license": "MIT",
+  "homepage": "https://github.com/entrolytics/drizzle-client",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/entrolytics/drizzle-client.git",
+    "directory": "drizzle-client"
+  },
+  "bugs": {
+    "url": "https://github.com/entrolytics/drizzle-client/issues"
+  },
+  "type": "module",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=24.x"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c --watch",
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "check": "biome check --write .",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.2",
+    "debug": "^4.4.3",
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.3.8",
+    "@rollup/plugin-commonjs": "^29.0.0",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@types/debug": "^4.1.12",
+    "@types/node": "^24.10.1",
+    "@types/pg": "^8.15.6",
+    "drizzle-orm": "^0.45.0",
+    "rollup": "^4.53.3",
+    "rollup-plugin-dts": "^6.3.0",
+    "rollup-plugin-esbuild": "^6.2.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.15"
+  },
+  "peerDependencies": {
+    "drizzle-orm": ">=0.44.0"
+  },
+  "peerDependenciesMeta": {
+    "drizzle-orm": {
+      "optional": false
+    }
+  }
+}
