@@ -1,6 +1,6 @@
 # @entrolytics/drizzle-client
 
-Drizzle ORM client wrapper with Neon serverless support, read replicas, and utilities for Entrolytics.
+Drizzle ORM client for [Entrolytics](https://ng.entrolytics.click) - First-party growth analytics for the edge.
 
 ## Installation
 
