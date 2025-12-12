@@ -1,6 +1,75 @@
-# @entrolytics/drizzle-client
+<div align="center">
+  <img src="https://raw.githubusercontent.com/entrolytics/.github/main/media/entrov2.png" alt="Entrolytics" width="64" height="64">
 
-Drizzle ORM client for [Entrolytics](https://ng.entrolytics.click) - First-party growth analytics for the edge.
+  [![npm](https://img.shields.io/npm/v/@entrolytics/drizzle-client.svg?logo=npm)](https://www.npmjs.com/package/@entrolytics/drizzle-client)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+  [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+
+</div>
+
+---
+
+## Overview
+
+**@entrolytics/drizzle-client** is the official Drizzle ORM client for Entrolytics - first-party growth analytics for the edge. Provides a type-safe database layer with built-in support for Neon serverless PostgreSQL and read replicas.
+
+**Why use this client?**
+- Neon serverless optimized with HTTP connections
+- Automatic read/write replica routing
+- Full transaction support with isolation levels
+- Built-in health checks and connection pooling
+
+## Key Features
+
+<table>
+<tr>
+<td width="50%">
+
+### Database Support
+- Neon serverless PostgreSQL
+- Standard PostgreSQL support
+- Connection pooling
+- Read replica routing
+
+</td>
+<td width="50%">
+
+### Developer Experience
+- Full TypeScript support
+- Transaction isolation levels
+- Health monitoring
+- Debug query logging
+
+</td>
+</tr>
+</table>
+
+## Quick Start
+
+<table>
+<tr>
+<td align="center" width="25%">
+<img src="https://api.iconify.design/lucide:download.svg?color=%236366f1" width="48"><br>
+<strong>1. Install</strong><br>
+<code>pnpm add</code>
+</td>
+<td align="center" width="25%">
+<img src="https://api.iconify.design/lucide:settings.svg?color=%236366f1" width="48"><br>
+<strong>2. Configure</strong><br>
+Database URL
+</td>
+<td align="center" width="25%">
+<img src="https://api.iconify.design/lucide:database.svg?color=%236366f1" width="48"><br>
+<strong>3. Initialize</strong><br>
+Create client
+</td>
+<td align="center" width="25%">
+<img src="https://api.iconify.design/lucide:zap.svg?color=%236366f1" width="48"><br>
+<strong>4. Query</strong><br>
+Start using
+</td>
+</tr>
+</table>
 
 ## Installation
 
