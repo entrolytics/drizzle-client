@@ -39,6 +39,7 @@ export class EntrolyticsDrizzleClient {
   type: DatabaseType;
   private pool: Pool | null = null;
   private replicaPool: Pool | null = null;
+  private neonSql: ReturnType<typeof neon> | null = null;
 
   constructor({
     url,
@@ -63,7 +64,7 @@ export class EntrolyticsDrizzleClient {
         fullResults: true,
         arrayMode: false,
       });
-      this.neonSql = neonSql;
+      this.neonSql = neonSql as ReturnType<typeof neon>;
 
       this.client = drizzleNeonHttp(neonSql, {
         schema: schema as any,
