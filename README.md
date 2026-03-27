@@ -1,9 +1,9 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/entrolytics/.github/main/media/entrov2.png" alt="Entrolytics" width="64" height="64">
+- <img src="https://raw.githubusercontent.com/entrolytics/.github/main/media/entrov2.png" alt="Entrolytics" width="64" height="64">
 
-  [![npm](https://img.shields.io/npm/v/@entrolytics/drizzle-client.svg?logo=npm)](https://www.npmjs.com/package/@entrolytics/drizzle-client)
-  [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-  [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![npm](https://img.shields.io/npm/v/@entrolytics/drizzle-client.svg?logo=npm)](https://www.npmjs.com/package/@entrolytics/drizzle-client)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6.svg?logo=typescript\&logoColor=white)](https://www.typescriptlang.org/)
 
 </div>
 
@@ -14,6 +14,7 @@
 **@entrolytics/drizzle-client** is the official Drizzle ORM client for Entrolytics - first-party growth analytics for the edge. Provides a type-safe database layer with built-in support for Neon serverless PostgreSQL and read replicas.
 
 **Why use this client?**
+
 - Neon serverless optimized with HTTP connections
 - Automatic read/write replica routing
 - Full transaction support with isolation levels
@@ -26,6 +27,7 @@
 <td width="50%">
 
 ### Database Support
+
 - Neon serverless PostgreSQL
 - Standard PostgreSQL support
 - Connection pooling
@@ -35,6 +37,7 @@
 <td width="50%">
 
 ### Developer Experience
+
 - Full TypeScript support
 - Transaction isolation levels
 - Health monitoring
@@ -123,13 +126,16 @@ await db.getWriteClient().insert(schema.users).values({ name: 'John' });
 ### Transactions
 
 ```typescript
-const result = await db.transaction(async (tx) => {
-  const user = await tx.insert(schema.users).values({ name: 'John' }).returning();
-  await tx.insert(schema.profiles).values({ userId: user[0].id });
-  return user;
-}, {
-  isolationLevel: 'serializable',
-});
+const result = await db.transaction(
+  async tx => {
+    const user = await tx.insert(schema.users).values({ name: 'John' }).returning();
+    await tx.insert(schema.profiles).values({ userId: user[0].id });
+    return user;
+  },
+  {
+    isolationLevel: 'serializable',
+  },
+);
 ```
 
 ### Raw Queries
@@ -148,15 +154,15 @@ const health = await db.healthCheck();
 
 ## Configuration Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `url` | `string` | required | Primary database connection URL |
-| `replicaUrl` | `string` | - | Read replica connection URL |
-| `schema` | `object` | - | Drizzle schema object |
-| `logQuery` | `boolean` | `false` | Enable query logging |
-| `queryLogger` | `function` | - | Custom query logger function |
-| `type` | `'neon' \| 'postgres'` | `'neon'` | Database type |
-| `poolConfig` | `object` | - | Connection pool configuration |
+| Option        | Type                   | Default  | Description                     |
+| ------------- | ---------------------- | -------- | ------------------------------- |
+| `url`         | `string`               | required | Primary database connection URL |
+| `replicaUrl`  | `string`               | -        | Read replica connection URL     |
+| `schema`      | `object`               | -        | Drizzle schema object           |
+| `logQuery`    | `boolean`              | `false`  | Enable query logging            |
+| `queryLogger` | `function`             | -        | Custom query logger function    |
+| `type`        | `'neon' \| 'postgres'` | `'neon'` | Database type                   |
+| `poolConfig`  | `object`               | -        | Connection pool configuration   |
 
 ## License
 

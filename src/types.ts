@@ -64,11 +64,7 @@ export interface SegmentParams {
  * Combined query filters interface
  */
 export interface QueryFilters
-  extends DateParams,
-    FilterParams,
-    SortParams,
-    PageParams,
-    SegmentParams {
+  extends DateParams, FilterParams, SortParams, PageParams, SegmentParams {
   cohortFilters?: QueryFilters;
 }
 

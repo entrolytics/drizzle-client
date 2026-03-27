@@ -8,9 +8,9 @@ import { Pool } from 'pg';
 export const log = debug('entrolytics:drizzle-client');
 
 export type DatabaseType = 'neon' | 'postgres';
-export type DrizzleDatabase =
-  | NeonHttpDatabase<Record<string, never>>
-  | NodePgDatabase<Record<string, never>>;
+type DrizzleSchema = Record<string, never> | Record<string, unknown>;
+export type DrizzleDatabase = NeonHttpDatabase<DrizzleSchema> | NodePgDatabase<DrizzleSchema>;
+type NeonSqlClient = ReturnType<typeof neon<false, true>>;
 
 export interface EntrolyticsDrizzleClientOptions {
   url: string;
@@ -31,6 +31,14 @@ export interface TransactionOptions {
   accessMode?: 'read only' | 'read write';
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function hasRowsResult(value: unknown): value is { rows: unknown[] } {
+  return isRecord(value) && Array.isArray(value.rows);
+}
+
 export class EntrolyticsDrizzleClient {
   client: DrizzleDatabase;
   replicaClient: DrizzleDatabase | null;
@@ -39,7 +47,8 @@ export class EntrolyticsDrizzleClient {
   type: DatabaseType;
   private pool: Pool | null = null;
   private replicaPool: Pool | null = null;
-  private neonSql: ReturnType<typeof neon> | null = null;
+  private neonSql: NeonSqlClient | null = null;
+  private replicaNeonSql: NeonSqlClient | null = null;
 
   constructor({
     url,
@@ -64,10 +73,10 @@ export class EntrolyticsDrizzleClient {
         fullResults: true,
         arrayMode: false,
       });
-      this.neonSql = neonSql as ReturnType<typeof neon>;
+      this.neonSql = neonSql;
 
       this.client = drizzleNeonHttp(neonSql, {
-        schema: schema as any,
+        schema,
         logger: logQuery ? { logQuery: queryLogger || (q => log(q)) } : undefined,
       });
 
@@ -76,12 +85,14 @@ export class EntrolyticsDrizzleClient {
           fullResults: true,
           arrayMode: false,
         });
+        this.replicaNeonSql = replicaNeonSql;
         this.replicaClient = drizzleNeonHttp(replicaNeonSql, {
-          schema: schema as any,
+          schema,
           logger: logQuery ? { logQuery: queryLogger || (q => log(q)) } : undefined,
         });
       } else {
         this.replicaClient = null;
+        this.replicaNeonSql = null;
       }
     } else {
       // Standard PostgreSQL with connection pooling
@@ -93,7 +104,7 @@ export class EntrolyticsDrizzleClient {
       });
 
       this.client = drizzlePg(this.pool, {
-        schema: schema as any,
+        schema,
         logger: logQuery ? { logQuery: queryLogger || (q => log(q)) } : undefined,
       });
 
@@ -105,7 +116,7 @@ export class EntrolyticsDrizzleClient {
           connectionTimeoutMillis: poolConfig?.connectionTimeoutMillis ?? 10000,
         });
         this.replicaClient = drizzlePg(this.replicaPool, {
-          schema: schema as any,
+          schema,
           logger: logQuery ? { logQuery: queryLogger || (q => log(q)) } : undefined,
         });
       } else {
@@ -135,12 +146,37 @@ export class EntrolyticsDrizzleClient {
    * Execute a raw SQL query
    * Automatically uses replica for SELECT queries if available
    */
-  async rawQuery<T = unknown>(query: string, _params: unknown[] = []): Promise<T[]> {
+  async rawQuery<T extends Record<string, unknown> = Record<string, unknown>>(
+    query: string,
+    _params: unknown[] = [],
+  ): Promise<T[]> {
     const isReadQuery = query.trim().toUpperCase().startsWith('SELECT');
-    const client = isReadQuery ? this.getReadClient() : this.getWriteClient();
+    const params = _params ?? [];
 
-    const result = await client.execute(sql.raw(query));
-    return result as unknown as T[];
+    if (this.type === 'neon' && this.neonSql) {
+      const executor = isReadQuery && this.replicaNeonSql ? this.replicaNeonSql : this.neonSql;
+      const result = await executor.query(query, params);
+
+      const rows: unknown[] = hasRowsResult(result)
+        ? result.rows
+        : Array.isArray(result)
+          ? result
+          : [];
+
+      return rows.filter((row): row is T => isRecord(row));
+    }
+
+    if (this.type === 'postgres') {
+      const pool = isReadQuery && this.replicaPool ? this.replicaPool : this.pool;
+      if (!pool) {
+        throw new Error('Database pool not initialized');
+      }
+      const result = await pool.query(query, params);
+      const rows: unknown[] = result.rows;
+      return rows.filter((row): row is T => isRecord(row));
+    }
+
+    throw new Error('Unsupported database type for rawQuery');
   }
 
   /**
@@ -166,7 +202,7 @@ export class EntrolyticsDrizzleClient {
         }
 
         await client.query('BEGIN');
-        const txDb = drizzlePg(client as any);
+        const txDb = drizzlePg(client);
         const result = await fn(txDb);
         await client.query('COMMIT');
         return result;

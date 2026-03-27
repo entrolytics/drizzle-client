@@ -1,516 +1,373 @@
-import { sql } from 'drizzle-orm';
 import {
-  char,
-  decimal,
+  bigint,
+  boolean,
   index,
   integer,
-  json,
+  jsonb,
   pgTable,
+  text,
   timestamp,
+  unique,
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
 
-export const board = pgTable(
-  'board',
-  {
-    boardId: uuid('board_id').primaryKey().default(sql`gen_random_uuid()`),
-    name: varchar('name', { length: 100 }).notNull(),
-    description: varchar('description', { length: 500 }),
-    config: json('config'),
-    userId: uuid('user_id'),
-    orgId: uuid('org_id'),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }),
-    deletedAt: timestamp('deleted_at', { withTimezone: true }),
-  },
-  table => {
-    return {
-      createdAtIdx: index('board_created_at_idx').on(table.createdAt),
-      orgIdIdx: index('board_org_id_idx').on(table.orgId),
-      userIdIdx: index('board_user_id_idx').on(table.userId),
-    };
-  },
-);
-
-export const boardWidget = pgTable(
-  'board_widget',
-  {
-    widgetId: uuid('widget_id').primaryKey().default(sql`gen_random_uuid()`),
-    boardId: uuid('board_id').notNull(),
-    websiteId: uuid('website_id').notNull(),
-    type: varchar('type', { length: 50 }).notNull(), // stats, chart, list, map, heatmap
-    title: varchar('title', { length: 100 }),
-    config: json('config'), // type-specific config (metrics, listType, limit, etc.)
-    position: integer('position').default(0),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }),
-  },
-  table => {
-    return {
-      boardIdIdx: index('board_widget_board_id_idx').on(table.boardId),
-      websiteIdIdx: index('board_widget_website_id_idx').on(table.websiteId),
-      boardIdPositionIdx: index('board_widget_board_id_position_idx').on(
-        table.boardId,
-        table.position,
-      ),
-    };
-  },
-);
-
-export const eventData = pgTable(
-  'event_data',
-  {
-    eventDataId: uuid('event_data_id').primaryKey().default(sql`gen_random_uuid()`),
-    websiteId: uuid('website_id').notNull(),
-    websiteEventId: uuid('website_event_id').notNull(),
-    dataKey: varchar('data_key', { length: 500 }).notNull(),
-    stringValue: varchar('string_value', { length: 500 }),
-    numberValue: decimal('number_value', { precision: 19, scale: 4 }),
-    dateValue: timestamp('date_value', { withTimezone: true }),
-    dataType: integer('data_type').notNull(),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-  },
-  table => {
-    return {
-      createdAtIdx: index('event_data_created_at_idx').on(table.createdAt),
-      websiteEventIdIdx: index('event_data_website_event_id_idx').on(table.websiteEventId),
-      websiteIdCreatedAtDataKeyIdx: index('event_data_website_id_created_at_data_key_idx').on(
-        table.websiteId,
-        table.createdAt,
-        table.dataKey,
-      ),
-      websiteIdCreatedAtIdx: index('event_data_website_id_created_at_idx').on(
-        table.websiteId,
-        table.createdAt,
-      ),
-      websiteIdIdx: index('event_data_website_id_idx').on(table.websiteId),
-    };
-  },
-);
-
-export const link = pgTable(
-  'link',
-  {
-    linkId: uuid('link_id').primaryKey().default(sql`gen_random_uuid()`),
-    name: varchar('name', { length: 100 }).notNull(),
-    url: varchar('url', { length: 500 }).notNull(),
-    slug: varchar('slug', { length: 100 }).unique().notNull(),
-    userId: uuid('user_id'),
-    orgId: uuid('org_id'),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }),
-    deletedAt: timestamp('deleted_at', { withTimezone: true }),
-  },
-  table => {
-    return {
-      createdAtIdx: index('link_created_at_idx').on(table.createdAt),
-      orgIdIdx: index('link_org_id_idx').on(table.orgId),
-      slugIdx: index('link_slug_idx').on(table.slug),
-      userIdIdx: index('link_user_id_idx').on(table.userId),
-    };
-  },
-);
-
-export const org = pgTable(
-  'org',
-  {
-    orgId: uuid('org_id').primaryKey().default(sql`gen_random_uuid()`),
-    name: varchar('name', { length: 50 }).notNull(),
-    accessCode: varchar('access_code', { length: 50 }).unique(),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }),
-    deletedAt: timestamp('deleted_at', { withTimezone: true }),
-    logoUrl: varchar('logo_url', { length: 2183 }),
-  },
-  table => {
-    return {
-      accessCodeIdx: index('org_access_code_idx').on(table.accessCode),
-    };
-  },
-);
-
-export const orgUser = pgTable(
-  'org_user',
-  {
-    orgUserId: uuid('org_user_id').primaryKey(),
-    orgId: uuid('org_id').notNull(),
-    userId: uuid('user_id').notNull(),
-    role: varchar('role', { length: 50 }).notNull(),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }),
-  },
-  table => {
-    return {
-      orgIdIdx: index('org_user_org_id_idx').on(table.orgId),
-      userIdIdx: index('org_user_user_id_idx').on(table.userId),
-    };
-  },
-);
-
-export const pixel = pgTable(
-  'pixel',
-  {
-    pixelId: uuid('pixel_id').primaryKey(),
-    name: varchar('name', { length: 100 }).notNull(),
-    slug: varchar('slug', { length: 100 }).unique().notNull(),
-    userId: uuid('user_id'),
-    orgId: uuid('org_id'),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }),
-    deletedAt: timestamp('deleted_at', { withTimezone: true }),
-  },
-  table => {
-    return {
-      createdAtIdx: index('pixel_created_at_idx').on(table.createdAt),
-      orgIdIdx: index('pixel_org_id_idx').on(table.orgId),
-      slugIdx: index('pixel_slug_idx').on(table.slug),
-      userIdIdx: index('pixel_user_id_idx').on(table.userId),
-    };
-  },
-);
-
-export const report = pgTable(
-  'report',
-  {
-    reportId: uuid('report_id').primaryKey(),
-    userId: uuid('user_id').notNull(),
-    websiteId: uuid('website_id').notNull(),
-    type: varchar('type', { length: 50 }).notNull(),
-    name: varchar('name', { length: 200 }).notNull(),
-    description: varchar('description', { length: 500 }).notNull(),
-    parameters: json('parameters').notNull(),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }),
-  },
-  table => {
-    return {
-      nameIdx: index('report_name_idx').on(table.name),
-      typeIdx: index('report_type_idx').on(table.type),
-      userIdIdx: index('report_user_id_idx').on(table.userId),
-      websiteIdIdx: index('report_website_id_idx').on(table.websiteId),
-    };
-  },
-);
-
-export const revenue = pgTable(
-  'revenue',
-  {
-    revenueId: uuid('revenue_id').primaryKey(),
-    websiteId: uuid('website_id').notNull(),
-    sessionId: uuid('session_id').notNull(),
-    eventId: uuid('event_id').notNull(),
-    eventName: varchar('event_name', { length: 50 }).notNull(),
-    currency: varchar('currency', { length: 10 }).notNull(),
-    revenue: decimal('revenue', { precision: 19, scale: 4 }),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-  },
-  table => {
-    return {
-      sessionIdIdx: index('revenue_session_id_idx').on(table.sessionId),
-      websiteIdCreatedAtIdx: index('revenue_website_id_created_at_idx').on(
-        table.websiteId,
-        table.createdAt,
-      ),
-      websiteIdIdx: index('revenue_website_id_idx').on(table.websiteId),
-      websiteIdSessionIdCreatedAtIdx: index('revenue_website_id_session_id_created_at_idx').on(
-        table.websiteId,
-        table.sessionId,
-        table.createdAt,
-      ),
-    };
-  },
-);
-
-export const segment = pgTable(
-  'segment',
-  {
-    segmentId: uuid('segment_id').primaryKey(),
-    websiteId: uuid('website_id').notNull(),
-    type: varchar('type', { length: 50 }).notNull(),
-    name: varchar('name', { length: 200 }).notNull(),
-    parameters: json('parameters').notNull(),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }),
-  },
-  table => {
-    return {
-      websiteIdIdx: index('segment_website_id_idx').on(table.websiteId),
-    };
-  },
-);
-
-export const session = pgTable(
-  'session',
-  {
-    sessionId: uuid('session_id').primaryKey(),
-    websiteId: uuid('website_id').notNull(),
-    browser: varchar('browser', { length: 20 }),
-    os: varchar('os', { length: 20 }),
-    device: varchar('device', { length: 20 }),
-    screen: varchar('screen', { length: 11 }),
-    language: varchar('language', { length: 35 }),
-    country: char('country', { length: 2 }),
-    region: varchar('region', { length: 20 }),
-    city: varchar('city', { length: 50 }),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-    distinctId: varchar('distinct_id', { length: 50 }),
-  },
-  table => {
-    return {
-      createdAtIdx: index('session_created_at_idx').on(table.createdAt),
-      websiteIdCreatedAtBrowserIdx: index('session_website_id_created_at_browser_idx').on(
-        table.websiteId,
-        table.createdAt,
-        table.browser,
-      ),
-      websiteIdCreatedAtCityIdx: index('session_website_id_created_at_city_idx').on(
-        table.websiteId,
-        table.createdAt,
-        table.city,
-      ),
-      websiteIdCreatedAtCountryIdx: index('session_website_id_created_at_country_idx').on(
-        table.websiteId,
-        table.createdAt,
-        table.country,
-      ),
-      websiteIdCreatedAtDeviceIdx: index('session_website_id_created_at_device_idx').on(
-        table.websiteId,
-        table.createdAt,
-        table.device,
-      ),
-      websiteIdCreatedAtIdx: index('session_website_id_created_at_idx').on(
-        table.websiteId,
-        table.createdAt,
-      ),
-      websiteIdCreatedAtLanguageIdx: index('session_website_id_created_at_language_idx').on(
-        table.websiteId,
-        table.createdAt,
-        table.language,
-      ),
-      websiteIdCreatedAtOsIdx: index('session_website_id_created_at_os_idx').on(
-        table.websiteId,
-        table.createdAt,
-        table.os,
-      ),
-      websiteIdCreatedAtRegionIdx: index('session_website_id_created_at_region_idx').on(
-        table.websiteId,
-        table.createdAt,
-        table.region,
-      ),
-      websiteIdCreatedAtScreenIdx: index('session_website_id_created_at_screen_idx').on(
-        table.websiteId,
-        table.createdAt,
-        table.screen,
-      ),
-      websiteIdIdx: index('session_website_id_idx').on(table.websiteId),
-    };
-  },
-);
-
-export const sessionData = pgTable(
-  'session_data',
-  {
-    sessionDataId: uuid('session_data_id').primaryKey(),
-    websiteId: uuid('website_id').notNull(),
-    sessionId: uuid('session_id').notNull(),
-    dataKey: varchar('data_key', { length: 500 }).notNull(),
-    stringValue: varchar('string_value', { length: 500 }),
-    numberValue: decimal('number_value', { precision: 19, scale: 4 }),
-    dateValue: timestamp('date_value', { withTimezone: true }),
-    dataType: integer('data_type').notNull(),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-    distinctId: varchar('distinct_id', { length: 50 }),
-  },
-  table => {
-    return {
-      createdAtIdx: index('session_data_created_at_idx').on(table.createdAt),
-      sessionIdCreatedAtIdx: index('session_data_session_id_created_at_idx').on(
-        table.sessionId,
-        table.createdAt,
-      ),
-      sessionIdIdx: index('session_data_session_id_idx').on(table.sessionId),
-      websiteIdCreatedAtDataKeyIdx: index('session_data_website_id_created_at_data_key_idx').on(
-        table.websiteId,
-        table.createdAt,
-        table.dataKey,
-      ),
-      websiteIdIdx: index('session_data_website_id_idx').on(table.websiteId),
-    };
-  },
-);
+// ============================================================================
+// Auth Schema
+// Synced with: entrolytics/packages/db/src/schema/auth.ts
+// ============================================================================
 
 export const user = pgTable(
   'user',
   {
-    userId: uuid('user_id').primaryKey(),
-    role: varchar('role', { length: 50 }).default('user').notNull(),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }),
-    deletedAt: timestamp('deleted_at', { withTimezone: true }),
-    displayName: varchar('display_name', { length: 255 }),
+    id: uuid('id').defaultRandom().primaryKey(),
     clerkId: varchar('clerk_id', { length: 255 }).unique().notNull(),
-    email: varchar('email', { length: 255 }).notNull(),
+    email: varchar('email', { length: 255 }).unique().notNull(),
+    name: varchar('name', { length: 255 }),
+    displayName: varchar('display_name', { length: 255 }),
     firstName: varchar('first_name', { length: 255 }),
     lastName: varchar('last_name', { length: 255 }),
+    avatarUrl: text('avatar_url'),
     imageUrl: varchar('image_url', { length: 2183 }),
+    role: varchar('role', { length: 50 }).default('user').notNull(),
+
+    // Onboarding tracking
+    onboardingCompleted: varchar('onboarding_completed', { length: 5 }).default('false'),
+    onboardingCompletedAt: timestamp('onboarding_completed_at', { withTimezone: true }),
+    onboardingStep: varchar('onboarding_step', { length: 50 }).default('welcome'),
+    onboardingSkipped: varchar('onboarding_skipped', { length: 5 }).default('false'),
+
+    // Additional context
+    companySize: varchar('company_size', { length: 50 }),
+    industry: varchar('industry', { length: 100 }),
+    useCase: varchar('use_case', { length: 500 }),
+    referralSource: varchar('referral_source', { length: 100 }),
+
+    // Email preferences
+    emailWeeklyReports: boolean('email_weekly_reports').default(true),
+    emailUsageAlerts: boolean('email_usage_alerts').default(true),
+    emailProductUpdates: boolean('email_product_updates').default(true),
+
+    deletedAt: timestamp('deleted_at'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
-  table => {
-    return {
-      emailIdx: index('user_email_idx').on(table.email),
-    };
-  },
+  table => ({
+    clerkIdIdx: index('idx_user_clerk_id').on(table.clerkId),
+    emailIdx: index('idx_user_email').on(table.email),
+    deletedAtIdx: index('idx_user_deleted_at').on(table.deletedAt),
+  }),
 );
+
+export const sessionToken = pgTable(
+  'session_token',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id')
+      .references(() => user.id, { onDelete: 'cascade' })
+      .notNull(),
+    tokenHash: varchar('token_hash', { length: 255 }).unique().notNull(),
+    expiresAt: timestamp('expires_at').notNull(),
+    lastUsedAt: timestamp('last_used_at').defaultNow(),
+    ipAddress: varchar('ip_address', { length: 45 }),
+    userAgent: text('user_agent'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  table => ({
+    tokenHashIdx: index('idx_session_token_hash').on(table.tokenHash),
+    userIdx: index('idx_session_user').on(table.userId),
+    expiresIdx: index('idx_session_expires').on(table.expiresAt),
+  }),
+);
+
+export const cliToken = pgTable(
+  'cli_token',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id')
+      .references(() => user.id, { onDelete: 'cascade' })
+      .notNull(),
+    name: varchar('name', { length: 255 }).notNull(),
+    tokenHash: varchar('token_hash', { length: 255 }).unique().notNull(),
+    lastUsedAt: timestamp('last_used_at'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    expiresAt: timestamp('expires_at'),
+    revokedAt: timestamp('revoked_at'),
+  },
+  table => ({
+    userIdx: index('idx_cli_token_user').on(table.userId),
+    tokenHashIdx: index('idx_cli_token_hash').on(table.tokenHash),
+  }),
+);
+
+export const cliSetupToken = pgTable(
+  'cli_setup_token',
+  {
+    tokenId: uuid('id').defaultRandom().primaryKey(),
+    token: varchar('token', { length: 255 }).unique().notNull(),
+    userId: uuid('user_id')
+      .references(() => user.id, { onDelete: 'cascade' })
+      .notNull(),
+    websiteId: uuid('website_id').notNull(),
+    orgId: uuid('org_id'),
+    purpose: varchar('purpose', { length: 50 }).default('cli-init').notNull(),
+    status: varchar('status', { length: 20 }).default('pending').notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    usedAt: timestamp('used_at', { withTimezone: true }),
+    ipAddress: varchar('ip_address', { length: 45 }),
+    userAgent: text('user_agent'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  table => ({
+    tokenIdx: index('idx_cli_setup_token').on(table.token),
+    userIdx: index('idx_cli_setup_user').on(table.userId),
+    statusIdx: index('idx_cli_setup_status').on(table.status),
+  }),
+);
+
+// ============================================================================
+// Organization Schema
+// Synced with: entrolytics/packages/db/src/schema/organization.ts
+// ============================================================================
+
+export const organization = pgTable(
+  'organization',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    name: varchar('name', { length: 255 }).notNull(),
+    slug: varchar('slug', { length: 255 }).unique().notNull(),
+    accessCode: varchar('access_code', { length: 50 }).unique(),
+    logoUrl: text('logo_url'),
+    clerkOrgId: varchar('clerk_org_id', { length: 255 }).unique(),
+    deletedAt: timestamp('deleted_at'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  table => ({
+    slugIdx: index('idx_org_slug').on(table.slug),
+    clerkIdIdx: index('idx_org_clerk_id').on(table.clerkOrgId),
+    deletedAtIdx: index('idx_org_deleted_at').on(table.deletedAt),
+  }),
+);
+
+export const orgMember = pgTable(
+  'org_member',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    orgId: uuid('org_id')
+      .references(() => organization.id, { onDelete: 'cascade' })
+      .notNull(),
+    userId: uuid('user_id')
+      .references(() => user.id, { onDelete: 'cascade' })
+      .notNull(),
+    role: varchar('role', { length: 50 })
+      .notNull()
+      .$type<'owner' | 'admin' | 'member' | 'viewer'>(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  table => ({
+    orgIdx: index('idx_org_member_org').on(table.orgId),
+    userIdx: index('idx_org_member_user').on(table.userId),
+    orgUserUnique: unique('unique_org_user').on(table.orgId, table.userId),
+  }),
+);
+
+export const orgInvitation = pgTable(
+  'org_invitation',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    orgId: uuid('org_id')
+      .references(() => organization.id, { onDelete: 'cascade' })
+      .notNull(),
+    email: varchar('email', { length: 255 }).notNull(),
+    role: varchar('role', { length: 50 }).notNull(),
+    invitedBy: uuid('invited_by').references(() => user.id),
+    token: varchar('token', { length: 255 }).unique().notNull(),
+    status: varchar('status', { length: 50 })
+      .notNull()
+      .default('pending')
+      .$type<'pending' | 'accepted' | 'expired'>(),
+    expiresAt: timestamp('expires_at').notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  table => ({
+    tokenIdx: index('idx_invitation_token').on(table.token),
+    orgIdx: index('idx_invitation_org').on(table.orgId),
+  }),
+);
+
+// ============================================================================
+// Website Schema
+// Synced with: entrolytics/packages/db/src/schema/website.ts
+// ============================================================================
 
 export const website = pgTable(
   'website',
   {
-    websiteId: uuid('website_id').primaryKey().default(sql`gen_random_uuid()`),
-    name: varchar('name', { length: 100 }).notNull(),
-    domain: varchar('domain', { length: 500 }),
+    id: uuid('id').defaultRandom().primaryKey(),
+    orgId: uuid('org_id').references(() => organization.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id').references(() => user.id),
+    name: varchar('name', { length: 255 }).notNull(),
+    domain: varchar('domain', { length: 255 }).notNull(),
     shareId: varchar('share_id', { length: 50 }).unique(),
     resetAt: timestamp('reset_at', { withTimezone: true }),
-    userId: uuid('user_id'),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }),
-    deletedAt: timestamp('deleted_at', { withTimezone: true }),
-    createdBy: uuid('created_by'),
-    orgId: uuid('org_id'),
+    ingestMode: varchar('ingest_mode', { length: 10 }).default('auto').notNull(),
+    createdBy: uuid('created_by').references(() => user.id),
+    timezone: varchar('timezone', { length: 100 }).default('UTC'),
+    public: boolean('public').default(false),
+
+    // Tracking settings
+    autoTrackPageviews: boolean('auto_track_pageviews').default(true),
+    autoTrackSessions: boolean('auto_track_sessions').default(true),
+    excludeQueryParams: text('exclude_query_params').array(),
+
+    // Privacy settings
+    anonymizeIps: boolean('anonymize_ips').default(false),
+    respectDnt: boolean('respect_dnt').default(true),
+    cookieConsentRequired: boolean('cookie_consent_required').default(false),
+
+    deletedAt: timestamp('deleted_at'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
-  table => {
-    return {
-      createdAtIdx: index('website_created_at_idx').on(table.createdAt),
-      createdByIdx: index('website_created_by_idx').on(table.createdBy),
-      orgIdIdx: index('website_org_id_idx').on(table.orgId),
-      shareIdIdx: index('website_share_id_idx').on(table.shareId),
-      userIdIdx: index('website_user_id_idx').on(table.userId),
-    };
-  },
+  table => ({
+    orgIdx: index('idx_website_org').on(table.orgId),
+    domainIdx: index('idx_website_domain').on(table.domain),
+  }),
 );
 
-export const websiteEvent = pgTable(
-  'website_event',
+export const apiKey = pgTable(
+  'api_key',
   {
-    eventId: uuid('event_id').primaryKey(),
-    websiteId: uuid('website_id').notNull(),
-    sessionId: uuid('session_id').notNull(),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-    urlPath: varchar('url_path', { length: 500 }).notNull(),
-    urlQuery: varchar('url_query', { length: 500 }),
-    referrerPath: varchar('referrer_path', { length: 500 }),
-    referrerQuery: varchar('referrer_query', { length: 500 }),
-    referrerDomain: varchar('referrer_domain', { length: 500 }),
-    pageTitle: varchar('page_title', { length: 500 }),
-    eventType: integer('event_type').default(1).notNull(),
-    eventName: varchar('event_name', { length: 50 }),
-    visitId: uuid('visit_id').notNull(),
-    tag: varchar('tag', { length: 50 }),
-    fbclid: varchar('fbclid', { length: 255 }),
-    gclid: varchar('gclid', { length: 255 }),
-    liFatId: varchar('li_fat_id', { length: 255 }),
-    msclkid: varchar('msclkid', { length: 255 }),
-    ttclid: varchar('ttclid', { length: 255 }),
-    twclid: varchar('twclid', { length: 255 }),
-    utmCampaign: varchar('utm_campaign', { length: 255 }),
-    utmContent: varchar('utm_content', { length: 255 }),
-    utmMedium: varchar('utm_medium', { length: 255 }),
-    utmSource: varchar('utm_source', { length: 255 }),
-    utmTerm: varchar('utm_term', { length: 255 }),
-    hostname: varchar('hostname', { length: 100 }),
+    id: uuid('id').defaultRandom().primaryKey(),
+    websiteId: uuid('website_id')
+      .references(() => website.id, { onDelete: 'cascade' })
+      .notNull(),
+    name: varchar('name', { length: 255 }).notNull(),
+
+    // Key storage (prefix visible, hash stored)
+    prefix: varchar('prefix', { length: 20 }).notNull(),
+    keyHash: varchar('key_hash', { length: 255 }).unique().notNull(),
+
+    // Scoped permissions
+    scopes: text('scopes').array().notNull().default(['events:write']),
+
+    // Rate limiting (per key)
+    rateLimitMax: integer('rate_limit_max').default(1000),
+    rateLimitWindow: integer('rate_limit_window').default(3600),
+
+    // CORS & domain restrictions
+    allowedDomains: text('allowed_domains').array(),
+    allowedOrigins: text('allowed_origins').array(),
+
+    // Usage tracking
+    lastUsedAt: timestamp('last_used_at'),
+    requestsCount: integer('requests_count').default(0),
+
+    deletedAt: timestamp('deleted_at'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    expiresAt: timestamp('expires_at'),
   },
-  table => {
-    return {
-      createdAtIdx: index('website_event_created_at_idx').on(table.createdAt),
-      sessionIdIdx: index('website_event_session_id_idx').on(table.sessionId),
-      visitIdIdx: index('website_event_visit_id_idx').on(table.visitId),
-      websiteIdCreatedAtEventNameIdx: index(
-        'website_event_website_id_created_at_event_name_idx',
-      ).on(table.websiteId, table.createdAt, table.eventName),
-      websiteIdCreatedAtHostnameIdx: index('website_event_website_id_created_at_hostname_idx').on(
-        table.websiteId,
-        table.createdAt,
-        table.hostname,
-      ),
-      websiteIdCreatedAtIdx: index('website_event_website_id_created_at_idx').on(
-        table.websiteId,
-        table.createdAt,
-      ),
-      websiteIdCreatedAtPageTitleIdx: index(
-        'website_event_website_id_created_at_page_title_idx',
-      ).on(table.websiteId, table.createdAt, table.pageTitle),
-      websiteIdCreatedAtReferrerDomainIdx: index(
-        'website_event_website_id_created_at_referrer_domain_idx',
-      ).on(table.websiteId, table.createdAt, table.referrerDomain),
-      websiteIdCreatedAtTagIdx: index('website_event_website_id_created_at_tag_idx').on(
-        table.websiteId,
-        table.createdAt,
-        table.tag,
-      ),
-      websiteIdCreatedAtUrlPathIdx: index('website_event_website_id_created_at_url_path_idx').on(
-        table.websiteId,
-        table.createdAt,
-        table.urlPath,
-      ),
-      websiteIdCreatedAtUrlQueryIdx: index('website_event_website_id_created_at_url_query_idx').on(
-        table.websiteId,
-        table.createdAt,
-        table.urlQuery,
-      ),
-      websiteIdIdx: index('website_event_website_id_idx').on(table.websiteId),
-      websiteIdSessionIdCreatedAtIdx: index(
-        'website_event_website_id_session_id_created_at_idx',
-      ).on(table.websiteId, table.sessionId, table.createdAt),
-      websiteIdVisitIdCreatedAtIdx: index('website_event_website_id_visit_id_created_at_idx').on(
-        table.websiteId,
-        table.visitId,
-        table.createdAt,
-      ),
-    };
-  },
+  table => ({
+    keyHashIdx: index('idx_api_key_hash').on(table.keyHash),
+    websiteIdx: index('idx_api_key_website').on(table.websiteId),
+    prefixIdx: index('idx_api_key_prefix').on(table.prefix),
+    deletedAtIdx: index('idx_api_key_deleted_at').on(table.deletedAt),
+  }),
 );
 
-// Type exports for TypeScript inference
-export type Board = typeof board.$inferSelect;
-export type NewBoard = typeof board.$inferInsert;
+// ============================================================================
+// Reports Schema
+// Synced with: entrolytics/packages/db/src/schema/reports.ts
+// ============================================================================
 
-export type BoardWidget = typeof boardWidget.$inferSelect;
-export type NewBoardWidget = typeof boardWidget.$inferInsert;
+export const report = pgTable(
+  'report',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    websiteId: uuid('website_id')
+      .references(() => website.id, { onDelete: 'cascade' })
+      .notNull(),
+    userId: uuid('user_id').references(() => user.id, { onDelete: 'set null' }),
+    createdBy: uuid('created_by').references(() => user.id),
+    name: varchar('name', { length: 255 }).notNull(),
+    description: text('description'),
+    type: varchar('type', { length: 50 })
+      .notNull()
+      .$type<'pageviews' | 'events' | 'funnel' | 'retention' | 'journey' | 'goal'>(),
+    config: jsonb('config').notNull(),
+    isFavorite: boolean('is_favorite').default(false),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  table => ({
+    websiteIdx: index('idx_report_website').on(table.websiteId),
+    typeIdx: index('idx_report_type').on(table.type),
+  }),
+);
 
-export type EventData = typeof eventData.$inferSelect;
-export type NewEventData = typeof eventData.$inferInsert;
+// ============================================================================
+// Billing Schema
+// Synced with: entrolytics/packages/db/src/schema/billing.ts
+// ============================================================================
 
-export type Link = typeof link.$inferSelect;
-export type NewLink = typeof link.$inferInsert;
+export const subscription = pgTable(
+  'subscription',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    orgId: uuid('org_id').references(() => organization.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id').references(() => user.id, { onDelete: 'cascade' }),
+    stripeSubscriptionId: varchar('stripe_subscription_id', { length: 255 }).unique(),
+    stripeCustomerId: varchar('stripe_customer_id', { length: 255 }),
+    stripePriceId: varchar('stripe_price_id', { length: 255 }),
+    planId: varchar('plan_id', { length: 50 })
+      .notNull()
+      .$type<'free' | 'pro' | 'business' | 'enterprise'>(),
+    status: varchar('status', { length: 50 })
+      .notNull()
+      .$type<'active' | 'canceled' | 'past_due' | 'trialing'>(),
+    cancelAtPeriodEnd: boolean('cancel_at_period_end').default(false),
 
-export type Org = typeof org.$inferSelect;
-export type NewOrg = typeof org.$inferInsert;
+    // Limits
+    eventsLimit: integer('events_limit').notNull(),
+    websitesLimit: integer('websites_limit').notNull(),
+    teamMembersLimit: integer('team_members_limit').notNull(),
 
-export type OrgUser = typeof orgUser.$inferSelect;
-export type NewOrgUser = typeof orgUser.$inferInsert;
+    currentPeriodStart: timestamp('current_period_start'),
+    currentPeriodEnd: timestamp('current_period_end'),
+    cancelAt: timestamp('cancel_at'),
+    trialStart: timestamp('trial_start'),
+    trialEnd: timestamp('trial_end'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  table => ({
+    orgIdx: index('idx_subscription_org').on(table.orgId),
+    userIdx: index('idx_subscription_user').on(table.userId),
+    stripeIdx: index('idx_subscription_stripe').on(table.stripeSubscriptionId),
+  }),
+);
 
-export type Pixel = typeof pixel.$inferSelect;
-export type NewPixel = typeof pixel.$inferInsert;
-
-export type Report = typeof report.$inferSelect;
-export type NewReport = typeof report.$inferInsert;
-
-export type Revenue = typeof revenue.$inferSelect;
-export type NewRevenue = typeof revenue.$inferInsert;
-
-export type Segment = typeof segment.$inferSelect;
-export type NewSegment = typeof segment.$inferInsert;
-
-export type Session = typeof session.$inferSelect;
-export type NewSession = typeof session.$inferInsert;
-
-export type SessionData = typeof sessionData.$inferSelect;
-export type NewSessionData = typeof sessionData.$inferInsert;
-
-export type User = typeof user.$inferSelect;
-export type NewUser = typeof user.$inferInsert;
-
-export type Website = typeof website.$inferSelect;
-export type NewWebsite = typeof website.$inferInsert;
-
-export type WebsiteEvent = typeof websiteEvent.$inferSelect;
-export type NewWebsiteEvent = typeof websiteEvent.$inferInsert;
+export const usageRecord = pgTable(
+  'usage_record',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    orgId: uuid('org_id').references(() => organization.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id').references(() => user.id, { onDelete: 'cascade' }),
+    periodStart: timestamp('period_start').notNull(),
+    periodEnd: timestamp('period_end').notNull(),
+    eventsCount: bigint('events_count', { mode: 'number' }).default(0),
+    pageviews: bigint('pageviews', { mode: 'number' }).default(0),
+    customEvents: bigint('custom_events', { mode: 'number' }).default(0),
+    linkClicks: bigint('link_clicks', { mode: 'number' }).default(0),
+    pixelFires: bigint('pixel_fires', { mode: 'number' }).default(0),
+    websitesCount: integer('websites_count').default(0),
+    teamMembersCount: integer('team_members_count').default(0),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  table => ({
+    orgIdx: index('idx_usage_org').on(table.orgId),
+    periodIdx: index('idx_usage_period').on(table.periodStart, table.periodEnd),
+  }),
+);
