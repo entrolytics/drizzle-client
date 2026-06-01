@@ -1,6 +1,6 @@
 {
   "name": "@entrolytics/drizzle-client",
-  "version": "2.2.0",
+  "version": "2.2.2",
   "description": "Drizzle ORM client for Entrolytics - First-party growth analytics for the edge",
   "keywords": [
     "analytics",
@@ -54,21 +54,22 @@
     "typecheck": "tsgo --noEmit"
   },
   "dependencies": {
-    "@neondatabase/serverless": "^1.0.2",
+    "@neondatabase/serverless": "^1.1.0",
     "debug": "^4.4.3",
-    "pg": "^8.20.0"
+    "pg": "^8.21.0"
   },
   "devDependencies": {
     "@types/debug": "^4.1.13",
-    "@types/node": "^25.5.0",
+    "@types/node": "^25.9.1",
     "@types/pg": "^8.20.0",
-    "drizzle-orm": "^0.45.2",
-    "typescript": "^6.0.2",
-    "vite-plus": "latest",
-    "vitest": "npm:@voidzero-dev/vite-plus-test@^0.1.14"
+    "drizzle-orm": "1.0.0-rc.4-5d5b77c",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.15",
+    "vite-plus": "^0.1.23",
+    "vitest": "^4.1.8"
   },
   "peerDependencies": {
-    "drizzle-orm": ">=0.45.0"
+    "drizzle-orm": "1.0.0-rc.4-5d5b77c"
   },
   "peerDependenciesMeta": {
     "drizzle-orm": {
@@ -78,11 +79,5 @@
   "engines": {
     "node": ">=24.x"
   },
-  "packageManager": "pnpm@10.33.0",
-  "pnpm": {
-    "overrides": {
-      "vite": "npm:@voidzero-dev/vite-plus-core@latest",
-      "vitest": "npm:@voidzero-dev/vite-plus-test@latest"
-    }
-  }
+  "packageManager": "pnpm@11.5.0"
 }

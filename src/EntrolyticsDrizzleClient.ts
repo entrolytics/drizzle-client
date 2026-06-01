@@ -1,21 +1,28 @@
 import { neon } from '@neondatabase/serverless';
 import debug from 'debug';
-import { sql } from 'drizzle-orm';
+import { type AnyRelations, type EmptyRelations, sql } from 'drizzle-orm';
 import { drizzle as drizzleNeonHttp, type NeonHttpDatabase } from 'drizzle-orm/neon-http';
 import { drizzle as drizzlePg, type NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { Pool } from 'pg';
+import { Pool, type PoolClient } from 'pg';
 
 export const log = debug('entrolytics:drizzle-client');
 
 export type DatabaseType = 'neon' | 'postgres';
-type DrizzleSchema = Record<string, never> | Record<string, unknown>;
-export type DrizzleDatabase = NeonHttpDatabase<DrizzleSchema> | NodePgDatabase<DrizzleSchema>;
+export type DrizzleDatabase<TRelations extends AnyRelations = EmptyRelations> =
+  | NeonHttpDatabase<TRelations>
+  | NodePgDatabase<TRelations>;
 type NeonSqlClient = ReturnType<typeof neon<false, true>>;
 
-export interface EntrolyticsDrizzleClientOptions {
+export interface EntrolyticsDrizzleClientOptions<TRelations extends AnyRelations = EmptyRelations> {
   url: string;
   replicaUrl?: string;
-  schema?: Record<string, unknown>;
+  /**
+   * Relational query metadata produced by drizzle's `defineRelations`.
+   * Enables the relational query builder (`db.query.*`) on the underlying client.
+   * Replaces the pre-1.0 `schema` option; the core query builder
+   * (`select().from(table)`) works without it.
+   */
+  relations?: TRelations;
   logQuery?: boolean;
   queryLogger?: (query: string) => void;
   type?: DatabaseType;
@@ -39,12 +46,13 @@ function hasRowsResult(value: unknown): value is { rows: unknown[] } {
   return isRecord(value) && Array.isArray(value.rows);
 }
 
-export class EntrolyticsDrizzleClient {
-  client: DrizzleDatabase;
-  replicaClient: DrizzleDatabase | null;
+export class EntrolyticsDrizzleClient<TRelations extends AnyRelations = EmptyRelations> {
+  client: DrizzleDatabase<TRelations>;
+  replicaClient: DrizzleDatabase<TRelations> | null;
   hasReplica: boolean;
   schema?: string;
   type: DatabaseType;
+  private readonly relations?: TRelations;
   private pool: Pool | null = null;
   private replicaPool: Pool | null = null;
   private neonSql: NeonSqlClient | null = null;
@@ -53,19 +61,24 @@ export class EntrolyticsDrizzleClient {
   constructor({
     url,
     replicaUrl,
-    schema,
+    relations,
     logQuery,
     queryLogger,
     type = 'neon',
     poolConfig,
-  }: EntrolyticsDrizzleClientOptions) {
+  }: EntrolyticsDrizzleClientOptions<TRelations>) {
     // Parse schema from URL if present
     const connectionUrl = new URL(url);
     const schemaName = connectionUrl.searchParams.get('schema') ?? undefined;
 
     this.type = type;
     this.schema = schemaName;
+    this.relations = relations;
     this.hasReplica = !!replicaUrl;
+
+    const logger = logQuery
+      ? { logQuery: queryLogger || ((query: string) => log(query)) }
+      : undefined;
 
     // Initialize based on database type
     if (type === 'neon') {
@@ -75,9 +88,10 @@ export class EntrolyticsDrizzleClient {
       });
       this.neonSql = neonSql;
 
-      this.client = drizzleNeonHttp(neonSql, {
-        schema,
-        logger: logQuery ? { logQuery: queryLogger || (q => log(q)) } : undefined,
+      this.client = drizzleNeonHttp<TRelations, NeonSqlClient>({
+        client: neonSql,
+        relations,
+        logger,
       });
 
       if (replicaUrl) {
@@ -86,9 +100,10 @@ export class EntrolyticsDrizzleClient {
           arrayMode: false,
         });
         this.replicaNeonSql = replicaNeonSql;
-        this.replicaClient = drizzleNeonHttp(replicaNeonSql, {
-          schema,
-          logger: logQuery ? { logQuery: queryLogger || (q => log(q)) } : undefined,
+        this.replicaClient = drizzleNeonHttp<TRelations, NeonSqlClient>({
+          client: replicaNeonSql,
+          relations,
+          logger,
         });
       } else {
         this.replicaClient = null;
@@ -96,28 +111,32 @@ export class EntrolyticsDrizzleClient {
       }
     } else {
       // Standard PostgreSQL with connection pooling
-      this.pool = new Pool({
+      const pool = new Pool({
         connectionString: url,
         max: poolConfig?.max ?? 10,
         idleTimeoutMillis: poolConfig?.idleTimeoutMillis ?? 30000,
         connectionTimeoutMillis: poolConfig?.connectionTimeoutMillis ?? 10000,
       });
+      this.pool = pool;
 
-      this.client = drizzlePg(this.pool, {
-        schema,
-        logger: logQuery ? { logQuery: queryLogger || (q => log(q)) } : undefined,
+      this.client = drizzlePg<TRelations>({
+        client: pool,
+        relations,
+        logger,
       });
 
       if (replicaUrl) {
-        this.replicaPool = new Pool({
+        const replicaPool = new Pool({
           connectionString: replicaUrl,
           max: poolConfig?.max ?? 10,
           idleTimeoutMillis: poolConfig?.idleTimeoutMillis ?? 30000,
           connectionTimeoutMillis: poolConfig?.connectionTimeoutMillis ?? 10000,
         });
-        this.replicaClient = drizzlePg(this.replicaPool, {
-          schema,
-          logger: logQuery ? { logQuery: queryLogger || (q => log(q)) } : undefined,
+        this.replicaPool = replicaPool;
+        this.replicaClient = drizzlePg<TRelations>({
+          client: replicaPool,
+          relations,
+          logger,
         });
       } else {
         this.replicaClient = null;
@@ -131,14 +150,14 @@ export class EntrolyticsDrizzleClient {
    * Get the appropriate client for read operations
    * Uses replica if available, otherwise primary
    */
-  getReadClient(): DrizzleDatabase {
+  getReadClient(): DrizzleDatabase<TRelations> {
     return this.replicaClient || this.client;
   }
 
   /**
    * Get the primary client for write operations
    */
-  getWriteClient(): DrizzleDatabase {
+  getWriteClient(): DrizzleDatabase<TRelations> {
     return this.client;
   }
 
@@ -184,7 +203,7 @@ export class EntrolyticsDrizzleClient {
    * Transactions always use the primary to ensure consistency
    */
   async transaction<T>(
-    fn: (tx: DrizzleDatabase) => Promise<T>,
+    fn: (tx: DrizzleDatabase<TRelations>) => Promise<T>,
     options?: TransactionOptions,
   ): Promise<T> {
     // For Neon HTTP, transactions are limited
@@ -202,7 +221,7 @@ export class EntrolyticsDrizzleClient {
         }
 
         await client.query('BEGIN');
-        const txDb = drizzlePg(client);
+        const txDb = drizzlePg<TRelations, PoolClient>({ client, relations: this.relations });
         const result = await fn(txDb);
         await client.query('COMMIT');
         return result;

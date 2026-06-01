@@ -3,7 +3,7 @@
 
 [![npm](https://img.shields.io/npm/v/@entrolytics/drizzle-client.svg?logo=npm)](https://www.npmjs.com/package/@entrolytics/drizzle-client)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6.svg?logo=typescript\&logoColor=white)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
 </div>
 
@@ -99,12 +99,37 @@ import * as schema from './schema';
 
 const db = new EntrolyticsDrizzleClient({
   url: process.env.DATABASE_URL,
-  schema,
   logQuery: process.env.NODE_ENV === 'development',
 });
 
-// Use the client
+// The core query builder works without any extra configuration
 const users = await db.client.select().from(schema.users);
+```
+
+### Relational Queries (`db.query.*`)
+
+Drizzle ORM 1.0 replaced the old `schema` option with `relations`, built via
+`defineRelations`. Pass it to enable the relational query builder:
+
+```typescript
+import { defineRelations } from 'drizzle-orm';
+import * as schema from './schema';
+
+const relations = defineRelations(schema, r => ({
+  users: {
+    posts: r.many.posts(),
+  },
+}));
+
+const db = new EntrolyticsDrizzleClient({
+  url: process.env.DATABASE_URL,
+  relations,
+});
+
+// `db` is typed as EntrolyticsDrizzleClient<typeof relations>
+const usersWithPosts = await db.client.query.users.findMany({
+  with: { posts: true },
+});
 ```
 
 ### With Read Replica
@@ -113,7 +138,6 @@ const users = await db.client.select().from(schema.users);
 const db = new EntrolyticsDrizzleClient({
   url: process.env.DATABASE_URL,
   replicaUrl: process.env.DATABASE_REPLICA_URL,
-  schema,
 });
 
 // Reads automatically use replica
@@ -154,15 +178,15 @@ const health = await db.healthCheck();
 
 ## Configuration Options
 
-| Option        | Type                   | Default  | Description                     |
-| ------------- | ---------------------- | -------- | ------------------------------- |
-| `url`         | `string`               | required | Primary database connection URL |
-| `replicaUrl`  | `string`               | -        | Read replica connection URL     |
-| `schema`      | `object`               | -        | Drizzle schema object           |
-| `logQuery`    | `boolean`              | `false`  | Enable query logging            |
-| `queryLogger` | `function`             | -        | Custom query logger function    |
-| `type`        | `'neon' \| 'postgres'` | `'neon'` | Database type                   |
-| `poolConfig`  | `object`               | -        | Connection pool configuration   |
+| Option        | Type                   | Default  | Description                                             |
+| ------------- | ---------------------- | -------- | ------------------------------------------------------- |
+| `url`         | `string`               | required | Primary database connection URL                         |
+| `replicaUrl`  | `string`               | -        | Read replica connection URL                             |
+| `relations`   | `object`               | -        | Relations from `defineRelations` (enables `db.query.*`) |
+| `logQuery`    | `boolean`              | `false`  | Enable query logging                                    |
+| `queryLogger` | `function`             | -        | Custom query logger function                            |
+| `type`        | `'neon' \| 'postgres'` | `'neon'` | Database type                                           |
+| `poolConfig`  | `object`               | -        | Connection pool configuration                           |
 
 ## License
 
