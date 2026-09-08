@@ -44,7 +44,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "vp pack",
+    "build": "vp pack && tsc --emitDeclarationOnly --noEmit false",
     "check": "vp lint --fix . && vp fmt --write .",
     "dev": "vp pack --watch",
     "format": "vp fmt --write .",
@@ -64,9 +64,8 @@
     "@types/pg": "^8.23.1",
     "drizzle-orm": "1.0.0-rc.4-5d5b77c",
     "typescript": "next",
-    "vite": "^8.2.2",
-    "vite-plus": "^0.3.1",
-    "vitest": "^5.0.0"
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
   },
   "peerDependencies": {
     "drizzle-orm": "1.0.0-rc.4-5d5b77c"
