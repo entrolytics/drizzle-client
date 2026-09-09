@@ -252,7 +252,8 @@ export class EntrolyticsDrizzleClient<TRelations extends AnyRelations = EmptyRel
   async healthCheck(): Promise<{ ok: boolean; latency: number; error?: string }> {
     const start = Date.now();
     try {
-      await this.client.execute(sql`SELECT 1`);
+      // drizzle-orm 1.0.0-rc.5 requires the row mode; the health check ignores the shape.
+      await this.client.execute(sql`SELECT 1`, 'objects');
       return { ok: true, latency: Date.now() - start };
     } catch (error) {
       return {
