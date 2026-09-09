@@ -44,13 +44,13 @@
     "access": "public"
   },
   "scripts": {
-    "build": "vp pack && tsc --emitDeclarationOnly --noEmit false",
-    "check": "vp lint --fix . && vp fmt --write .",
-    "dev": "vp pack --watch",
-    "format": "vp fmt --write .",
-    "lint": "vp lint --fix --fix-suggestions . && vp fmt --write .",
-    "lint:fix-unsafe": "vp lint -f stylish --import-plugin --type-aware --type-check --vitest-plugin --fix --fix-suggestions --fix-dangerously .",
-    "test": "vp test run",
+    "build": "tsdown && tsc --emitDeclarationOnly --noEmit false",
+    "check": "oxlint --fix . && oxfmt --write .",
+    "dev": "tsdown --watch",
+    "format": "oxfmt --write .",
+    "lint": "oxlint --fix --fix-suggestions . && oxfmt --write .",
+    "lint:fix-unsafe": "oxlint -f stylish --import-plugin --type-aware --type-check --vitest-plugin --fix --fix-suggestions --fix-dangerously .",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -62,10 +62,12 @@
     "@types/debug": "^4.1.13",
     "@types/node": "^26.5.0",
     "@types/pg": "^8.23.1",
-    "drizzle-orm": "1.0.0-rc.4-5d5b77c",
+    "drizzle-orm": "rc5",
+    "oxfmt": "^0.67.0",
+    "oxlint": "^1.82.0",
+    "tsdown": "^0.23.0",
     "typescript": "next",
-    "vite": "catalog:",
-    "vite-plus": "catalog:"
+    "vitest": "^5.0.0"
   },
   "peerDependencies": {
     "drizzle-orm": "1.0.0-rc.4-5d5b77c"
