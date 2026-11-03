@@ -17,7 +17,7 @@
     "url": "https://github.com/entrolytics/drizzle-client/issues"
   },
   "license": "MIT",
-  "author": "Entrolytics <hey@entrolytics.click>",
+  "author": "Entrolytics <hey@entrolytics.dev>",
   "repository": {
     "type": "git",
     "url": "https://github.com/entrolytics/drizzle-client.git",
@@ -54,23 +54,23 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@neondatabase/serverless": "^1.1.0",
+    "@neondatabase/serverless": "^1.2.0",
     "debug": "^4.4.3",
-    "pg": "^8.23.0"
+    "pg": "^8.23.1"
   },
   "devDependencies": {
     "@types/debug": "^4.1.13",
-    "@types/node": "^26.5.0",
+    "@types/node": "^26.6.6",
     "@types/pg": "^8.23.1",
     "drizzle-orm": "rc5",
-    "oxfmt": "^0.67.0",
-    "oxlint": "^1.82.0",
-    "tsdown": "^0.23.0",
+    "oxfmt": "^0.76.0",
+    "oxlint": "^1.91.0",
+    "tsdown": "^0.23.5",
     "typescript": "next",
-    "vitest": "^5.0.0"
+    "vitest": "^5.1.0"
   },
   "peerDependencies": {
-    "drizzle-orm": "1.0.0-rc.4-5d5b77c"
+    "drizzle-orm": "1.0.0-rc.5-ab785fc"
   },
   "peerDependenciesMeta": {
     "drizzle-orm": {
@@ -78,7 +78,7 @@
     }
   },
   "engines": {
-    "node": ">=24.20.0"
+    "node": ">=24.22.2"
   },
-  "packageManager": "pnpm@11.26.0"
+  "packageManager": "pnpm@12.17.0"
 }
