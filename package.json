@@ -70,7 +70,7 @@
     "vitest": "^5.1.2"
   },
   "peerDependencies": {
-    "drizzle-orm": "rc"
+    "drizzle-orm": "^1.0.0-rc.6"
   },
   "peerDependenciesMeta": {
     "drizzle-orm": {
