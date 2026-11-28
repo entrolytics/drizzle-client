@@ -5,6 +5,10 @@ All notable changes to this project are documented in this file. The format foll
 
 ## [Unreleased]
 
+### Changed
+
+- `@neondatabase/serverless` 1.2.2.
+
 ## [4.0.0] - 2026-11-28
 
 ### Removed
