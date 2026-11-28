@@ -1,6 +1,6 @@
 {
   "name": "@entrolytics/drizzle-client",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "Drizzle ORM client for Entrolytics - First-party growth analytics for the edge",
   "keywords": [
     "analytics",

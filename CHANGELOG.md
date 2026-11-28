@@ -5,6 +5,8 @@ All notable changes to this project are documented in this file. The format foll
 
 ## [Unreleased]
 
+## [4.0.1] - 2026-11-28
+
 ### Changed
 
 - `@neondatabase/serverless` 1.2.2.
@@ -23,6 +25,7 @@ All notable changes to this project are documented in this file. The format foll
 
 - Built and released with pnpm 12.24.0. No code changes.
 
-[Unreleased]: https://github.com/entrolytics/drizzle-client/compare/v4.0.0...HEAD
+[Unreleased]: https://github.com/entrolytics/drizzle-client/compare/v4.0.1...HEAD
+[4.0.1]: https://github.com/entrolytics/drizzle-client/compare/v4.0.0...v4.0.1
 [4.0.0]: https://github.com/entrolytics/drizzle-client/compare/v3.0.3...v4.0.0
 [3.0.3]: https://github.com/entrolytics/drizzle-client/releases/tag/v3.0.3
