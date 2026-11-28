@@ -54,7 +54,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@neondatabase/serverless": "^1.2.1",
+    "@neondatabase/serverless": "^1.2.2",
     "debug": "^4.4.3",
     "pg": "^8.23.1"
   },
