@@ -138,14 +138,12 @@ export const organization = pgTable(
     slug: varchar('slug', { length: 255 }).unique().notNull(),
     accessCode: varchar('access_code', { length: 50 }).unique(),
     logoUrl: text('logo_url'),
-    clerkOrgId: varchar('clerk_org_id', { length: 255 }).unique(),
     deletedAt: timestamp('deleted_at'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
   table => ({
     slugIdx: index('idx_org_slug').on(table.slug),
-    clerkIdIdx: index('idx_org_clerk_id').on(table.clerkOrgId),
     deletedAtIdx: index('idx_org_deleted_at').on(table.deletedAt),
   }),
 );
